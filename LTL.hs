@@ -42,4 +42,3 @@ checkLTL interp (U l r) ss = let
 checkLTL interp (W l r) ss = checkLTL interp ((U l r) :|: (G l)) ss
 checkLTL interp (R l r) ss = checkLTL interp (W r (l :&: r)) ss
 
---checkLTL cond prop (exec (example))
