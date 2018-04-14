@@ -6,6 +6,72 @@ import Control.Monad
 import Control.Monad.State
 import qualified Data.Map as Map
 
+<<<<<<< HEAD
+type ASTSt = (Map String FuncDec,[Stmt],[Map String Type])
+
+-- prog = do declare "x" TyInt (val 1)
+--           declare "y" TyInt (val 1)
+--           while (var "x" :<: 1000) 
+--               (do (var "x") :<-: ()   
+
+declare :: String -> Type -> Exp -> State ASTSt
+declare s t e = do (f,stmts,m) <- get
+                  case (Map.lookup s m) of
+                     Nothing -> put (f, stmts ++ [Declare s e], Map.insert s t m)
+                     Just _  -> fail ("[ERROR] Attempting to declare an already declared variable " ++ s)
+
+assign :: String -> Exp -> State ASTSt
+assign s e = do (f,stmts,m) <- get
+               case (Map.lookup s m) of
+                  Just t -> put (f, stmts ++ [Assign s e],m) --precisa adicionar o tipo?? Já esta no map??
+                  Nothing -> fail ("[ERROR] Attempting to assign a nonexistent variable" ++ s)
+
+ifelse :: Exp -> [Stmt] -> (Maybe [Stmt]) -> State ASTSt --como saber qual a verificacao??
+ifelse e xs (Just ys) = do (f,stmts,m) <- get
+                           put (f, stmts ++ [If e xs ys],m)
+ifelse e xs Nothing = do (f,stmts,m) <- get
+                         put (f, stmts ++ [If e xs Nothing],m)                        
+
+while :: Exp -> [Stmt] -> State ASTSt -- como saber qual a verificacao??
+while e xs = do (f,stmts,m) <- get
+                put (f, stmts ++ [While e xs],m)
+
+callfunc :: String -> [Exp] -> State ASTSt
+callfunc s xs = do (f,stmts,m) <- get
+                   case (Map.lookup s f) of
+                      Nothing -> fail ("[ERROR] Attempting to run a nonexistent function" ++ s)
+                      Just _ -> put (f, stmts ++ [CallFunc s xs],m)
+                  
+return :: Exp -> State ASTSt
+return e = do (f,stmts,m) <- get
+              put (f, stmts ++ [Return e],m)
+
+-- var :: String -> State ASTSt
+-- var v = do (f,stmts,m) <- get
+--            case (Map.lookup v m) of
+--                  Nothing -> put (f, stmts ++ [Declare v e], Map.insert m (v,t))
+--                  Just _  -> fail ("Attempting to declare an already declared variable " ++ v)            
+
+-- usar State Exp??
+var :: String -> State Exp
+var s = do put (Evar s) 
+
+int :: Int -> State Exp
+int i = do put (ILit i)
+
+float :: Float -> State Exp
+float f = do put (FLit f)
+
+double :: Double -> State Exp
+double d = do put (DLit d)
+
+bool :: Bool -> State Exp
+bool b = do put (BLit b)
+
+char :: Char -> State Exp
+char c = do put (CLit c)
+
+=======
 type ASTSt = (Map String FuncDec, [Stmt],[Map String Type])
 
 
@@ -37,6 +103,7 @@ var v = do (f,stmts,m) <- get
 -- int i = do (f,stmts,m) <- get
 -- 		   put (f,stmts ++ [])                
                  
+>>>>>>> b51673485613347cb655c5aeddeb59c8a521de55
 plus :: Exp -> Exp -> State Exp
 plus e e' = do put (Plus e e')       
 
@@ -73,7 +140,10 @@ not e = do put (Not e e')
 ecallfunc :: String -> [Exp] -> State Exp
 ecallfunc s e = do put (ECallFunc s e)  
             
+<<<<<<< HEAD
+=======
 prog = do declare "x" TyInt (val 1)
           declare "y" TyInt (val 1)
           while (var "x" :<: 1000) 
               (do (var "x") :<-: ()   
+>>>>>>> b51673485613347cb655c5aeddeb59c8a521de55
