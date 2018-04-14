@@ -46,12 +46,6 @@ return :: Exp -> State ASTSt
 return e = do (f,stmts,m) <- get
               put (f, stmts ++ [Return e],m)
 
--- var :: String -> State ASTSt
--- var v = do (f,stmts,m) <- get
---            case (Map.lookup v m) of
---                  Nothing -> put (f, stmts ++ [Declare v e], Map.insert m (v,t))
---                  Just _  -> fail ("Attempting to declare an already declared variable " ++ v)            
-
 -- usar State Exp??
 var :: String -> State Exp
 var s = do put (Evar s) 
