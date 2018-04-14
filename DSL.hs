@@ -6,7 +6,7 @@ import Control.Monad
 import Control.Monad.State
 import qualified Data.Map as Map
 
-<<<<<<< HEAD
+
 type ASTSt = (Map String FuncDec,[Stmt],[Map String Type])
 
 -- prog = do declare "x" TyInt (val 1)
