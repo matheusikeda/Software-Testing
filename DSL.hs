@@ -71,39 +71,6 @@ bool b = do put (BLit b)
 char :: Char -> State Exp
 char c = do put (CLit c)
 
-=======
-type ASTSt = (Map String FuncDec, [Stmt],[Map String Type])
-
-
-declare :: String -> Exp -> Stmt
-declare s e = Declare s e
-
-assign :: String -> Exp -> Stmt
-assign s e = Assign s e
-
-ifelse :: Exp -> [Stmt] -> (Maybe [Stmt]) -> Stmt
-ifelse e xs ys = If e xs ys
-
-while :: Exp -> [Stmt] -> Stmt
-while e xs = While e xs
-
-callfunc :: String -> [Exp] -> Stmt
-callfunc s xs = CallFunc s xs
-
-return :: Exp -> Stmt
-return e = Return e
-
-var :: String -> State ASTSt
-var v = do (f,stmts,m) <- get
-           case (Map.lookup v m) of
-                 Nothing -> put (f, stmts ++ [Declare v e], Map.insert m (v,t))
-                 Just _  -> fail ("Attempting to declare an already declared variable " ++ v)
-                 
--- int :: Int -> State ASTSt
--- int i = do (f,stmts,m) <- get
--- 		   put (f,stmts ++ [])                
-                 
->>>>>>> b51673485613347cb655c5aeddeb59c8a521de55
 plus :: Exp -> Exp -> State Exp
 plus e e' = do put (Plus e e')       
 
@@ -139,11 +106,3 @@ not e = do put (Not e e')
 
 ecallfunc :: String -> [Exp] -> State Exp
 ecallfunc s e = do put (ECallFunc s e)  
-            
-<<<<<<< HEAD
-=======
-prog = do declare "x" TyInt (val 1)
-          declare "y" TyInt (val 1)
-          while (var "x" :<: 1000) 
-              (do (var "x") :<-: ()   
->>>>>>> b51673485613347cb655c5aeddeb59c8a521de55
