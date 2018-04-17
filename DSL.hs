@@ -4,6 +4,7 @@ import AST
 import Interpreter
 import Control.Monad
 import Control.Monad.State
+import Data.Map(Map)
 import qualified Data.Map as Map
 
 
@@ -11,30 +12,38 @@ type ASTSt = (Map String FuncDec,[Stmt],[Map String Type])
 
 -- prog = do declare "x" TyInt (val 1)
 --           declare "y" TyInt (val 1)
---           while (var "x" :<: 1000) 
+             if(
+                 exp,
+                 (do ... ) 
+             )
+--           while (var "x" :<: (ival 1000)) 
 --               (do (var "x") :<-: ()   
 
 declare :: String -> Type -> Exp -> State ASTSt
 declare s t e = do (f,stmts,m) <- get
-                  case (Map.lookup s m) of
-                     Nothing -> put (f, stmts ++ [Declare s e], Map.insert s t m)
-                     Just _  -> fail ("[ERROR] Attempting to declare an already declared variable " ++ s)
+                   let verif = checkExpr m e
+                   case (Map.lookup s m) of 
+                      Nothing -> put (f, stmts ++ [Declare s verif], Map.insert s t m)
+                      Just _  -> fail ("[ERROR] Attempting to declare an already declared variable " ++ s)
 
 assign :: String -> Exp -> State ASTSt
 assign s e = do (f,stmts,m) <- get
-               case (Map.lookup s m) of
-                  Just t -> put (f, stmts ++ [Assign s e],m) --precisa adicionar o tipo?? Já esta no map??
-                  Nothing -> fail ("[ERROR] Attempting to assign a nonexistent variable" ++ s)
+                let verif = checkExpr m e
+                case (Map.lookup s m) of
+                   Just t -> put (f, stmts ++ [Assign s verif],m)
+                   Nothing -> fail ("[ERROR] Attempting to assign a nonexistent variable" ++ s)
 
-ifelse :: Exp -> [Stmt] -> (Maybe [Stmt]) -> State ASTSt --como saber qual a verificacao??
-ifelse e xs (Just ys) = do (f,stmts,m) <- get
-                           put (f, stmts ++ [If e xs ys],m)
-ifelse e xs Nothing = do (f,stmts,m) <- get
-                         put (f, stmts ++ [If e xs Nothing],m)                        
+if' :: Exp -> [Stmt] -> State ASTSt
+if' e xs = do (f,stmts,m) <- get
+              let verif = checkExpr m e
+              put (f, stmts ++ [If verif xs Nothing],m)
 
-while :: Exp -> [Stmt] -> State ASTSt -- como saber qual a verificacao??
+else' :: [Stmt]              
+
+while :: Exp -> [Stmt] -> State ASTSt
 while e xs = do (f,stmts,m) <- get
-                put (f, stmts ++ [While e xs],m)
+                let verif = checkExpr m e
+                put (f, stmts ++ [While verif xs],m)
 
 callfunc :: String -> [Exp] -> State ASTSt
 callfunc s xs = do (f,stmts,m) <- get
@@ -44,59 +53,99 @@ callfunc s xs = do (f,stmts,m) <- get
                   
 return :: Exp -> State ASTSt
 return e = do (f,stmts,m) <- get
-              put (f, stmts ++ [Return e],m)
+              let verif = checkExpr m e
+              put (f, stmts ++ [Return e],m)    
 
--- usar State Exp??
-var :: String -> State Exp
-var s = do put (Evar s) 
+checkExpr :: Map String Type -> Exp -> Either String Type
+checkExpr m (Plus e1 e2) = let t1 = checkExpr e1
+                               t2 = checkExpr e2
+                           in if t1 == t2 then (Right t1) else Left "[ERROR] Plus operator must be applied to integer, float or double types" 
+checkExpr m (Minus e1 e2) = let t1 = checkExpr e1
+                                t2 = checkExpr e2
+                            in if t1 == t2 then (Right t1) else Left "[ERROR] Minus operator must be applied to integer, float or double types"
+checkExpr m (Times e1 e2) = let t1 = checkExpr e1
+                                t2 = checkExpr e2
+                            in if t1 == t2 then (Right t1) else Left "[ERROR] Times operator must be applied to integer, float or double types"
+checkExpr m (Divided e1 e2) = let t1 = checkExpr e1
+                                t2 = checkExpr e2
+                              in if t1 == t2 then (Right t1) else Left "[ERROR] Divided operator must be applied to integer, float or double types"                            
+checkExpr m (And e1 e2) = let t1 = checkExpr e1
+                                t2 = checkExpr e2
+                          in if t1 == t2 then (Right t1) else Left "[ERROR] And operator must be applied to boolean types"
+checkExpr m (Or e1 e2) = let t1 = checkExpr e1
+                              t2 = checkExpr e2
+                         in if t1 == t2 then (Right t1) else Left "[ERROR] Or operator must be applied to boolean types"                            
+checkExpr m (Equal e1 e2) = let t1 = checkExpr e1
+                              t2 = checkExpr e2
+                            in if t1 == t2 then (Right t1) else Left "[ERROR] Equal operator must be applied to integer, float, double or boolean types"
+checkExpr m (Gt e1 e2) = let t1 = checkExpr e1
+                             t2 = checkExpr e2
+                         in if t1 == t2 then (Right t1) else Left "[ERROR] Greater than operator must be applied to integer, float or double types"
+checkExpr m (Lt e1 e2) = let t1 = checkExpr e1
+                             t2 = checkExpr e2
+                         in if t1 == t2 then (Right t1) else Left "[ERROR] Less than operator must be applied to integer, float or double types"
+checkExpr m (Ne e1 e2) = let t1 = checkExpr e1
+                             t2 = checkExpr e2
+                         in if t1 == t2 then (Right t1) else Left "[ERROR] Not equal operator must be applied to integer, float or double types"
+checkExpr m (ILit _) = Right TyInt
+checkExpr m (FLit _) = Right TyFloat
+checkExpr m (DLit _) = Right TyDouble
+checkExpr m (BLit _) = Right TyBool
+checkExpr m (CLit _) = Right TyChar
+checkExpr m (EVar v) = case (Map.lookup v m) of
+                          Just t -> Right t
+                          Nothing -> Left "[ERROR] Nonexistent variable" 
 
-int :: Int -> State Exp
-int i = do put (ILit i)
+var :: String -> Exp
+var s = Evar s 
 
-float :: Float -> State Exp
-float f = do put (FLit f)
+int :: Int -> Exp
+int i = ILit i
 
-double :: Double -> State Exp
-double d = do put (DLit d)
+float :: Float -> Exp
+float f = FLit f
 
-bool :: Bool -> State Exp
-bool b = do put (BLit b)
+double :: Double -> Exp
+double d = DLit d
 
-char :: Char -> State Exp
-char c = do put (CLit c)
+bool :: Bool -> Exp
+bool b = BLit b
 
-plus :: Exp -> Exp -> State Exp
-plus e e' = do put (Plus e e')       
+char :: Char -> Exp
+char c = CLit c
 
-minus :: Exp -> Exp -> State Exp
-minus e e' = do put (Minus e e')   
+(:+:) :: Exp -> Exp -> Exp
+e :+: e' = do put (Plus e e')       
 
-times :: Exp -> Exp -> State Exp
-times e e' = do put (Times e e')   
+(:-:) :: Exp -> Exp -> Exp
+e :-: e' = Minus e e'   
 
-divided :: Exp -> Exp -> State Exp
-divided e e' = do put (Divided e e')   
+(:*:) :: Exp -> Exp -> Exp
+e :*: e' = Times e e'   
 
-and :: Exp -> Exp -> State Exp
-and e e' = do put (And e e')   
+(:/:) :: Exp -> Exp -> Exp
+e :/: e' = Divided e e'   
 
-or :: Exp -> Exp -> State Exp
-or e e' = do put (Or e e')   
+(:&&:) :: Exp -> Exp -> Exp
+e :&&: e' = And e e'
 
-equal :: Exp -> Exp -> State Exp
-equal e e' = do put (Equal e e')   
+(:||:) :: Exp -> Exp -> Exp
+e :||: e' = Or e e'   
 
-gt :: Exp -> Exp -> State Exp
-gt e e' = do put (Gt e e')   
+(:==:) :: Exp -> Exp -> Exp
+e :==: e' = Equal e e'   
 
-lt :: Exp -> Exp -> State Exp
-lt e e' = do put (Lt e e')   
+(:>:) :: Exp -> Exp -> Exp
+e :>: e' = Gt e e' 
 
-ne :: Exp -> Exp -> State Exp
-ne e e' = do put (Ne e e')        
+(:<:) :: Exp -> Exp -> Exp
+e :<: e' = Lt e e'   
 
-not :: Exp -> State Exp
-not e = do put (Not e e')
+(:!=:) :: Exp -> Exp -> Exp
+e :!=: e' = Ne e e'        
 
-ecallfunc :: String -> [Exp] -> State Exp
-ecallfunc s e = do put (ECallFunc s e)  
+(:!:) :: Exp -> Exp
+:!: e = Not e e'
+
+ecallfunc :: String -> [Exp] -> Exp
+ecallfunc s e = ECallFunc s e  
