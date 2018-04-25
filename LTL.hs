@@ -41,4 +41,3 @@ checkLTL interp (U l r) ss = let
                              in checkLTL interp r ss'
 checkLTL interp (W l r) ss = checkLTL interp ((U l r) :|: (G l)) ss
 checkLTL interp (R l r) ss = checkLTL interp (W r (l :&: r)) ss
-

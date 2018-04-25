@@ -62,9 +62,7 @@ type Interp a = String -> a -> Bool
 not' :: Value -> Value 
 not' (VBool v) = VBool (not v)
 
--- eval :: Exp -> State ([Env Value]) Value
 eval :: Exp -> State (ProgState) Value
--- eval (EVar v) = gets (Map.! v)
 eval (EVar v) = do 
                   x <- get
                   return  (snd $ liftM (Map.! v) x)
@@ -121,7 +119,6 @@ insertVar (f,m) s v = (f,Map.insert s v m)
 updateVar :: ProgState -> String -> Value -> ProgState
 updateVar (f,m) s v = (f,Map.update (\_ -> Just v) s m)
 
--- execStmt :: Stmt -> State ([Env Value]) ()
 execStmt :: Stmt -> State (ProgState) ()
 execStmt (Assign s e) = do
                           i <- eval e
@@ -186,21 +183,6 @@ body = Assign "x" (Plus (ILit 1) (EVar "x"))
 adapt (VBool b) = b
 initState = Map.fromList [("x",VInt 0)]
 
- 
---exec :: [Stmt] -> [Env Value]
---exec = execState (whileM test [body]) [initState]
-
---execStmt (While e xs) = do i <- eval e
-  --                         until ()     mapM execStmt xs    
-
---execStmt (Declare s e) = do 
---                            i <- eval e
-
---execStmt (CallFunc s xs) =                
-
-
-
-
 --Test
 -- exec' :: Prog -> State ([Env Int]) ()
 -- exec' = mapM_ execStmt
@@ -219,6 +201,7 @@ inistate = (Map.fromList [("soma",func)],Map.empty)
 
 func :: FuncDec 
 func = Func "soma" TyInt [(TyInt,"x"),(TyInt,"y")] [Assign "x" (ILit 1) ,Return (Plus (EVar "x") (EVar "y"))]
+
 -- {-
 -- x = 0
 -- y = x + 1
