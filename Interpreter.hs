@@ -4,10 +4,8 @@ import Control.Monad
 import Control.Monad.State
 import Data.Map(Map)
 import qualified Data.Map as Map
+import LTL (Env, Interp)
 import AST
-
-type Env a = Map String a
-type Interp a = String -> a -> Bool
 
 (<+>) :: Value -> Value -> Value 
 (<+>) (VInt v) (VInt v') = VInt (v + v')
@@ -119,45 +117,52 @@ insertVar (f,m) s v = (f,Map.insert s v m)
 updateVar :: ProgState -> String -> Value -> ProgState
 updateVar (f,m) s v = (f,Map.update (\_ -> Just v) s m)
 
-execStmt :: Stmt -> State (ProgState) ()
+execStmt :: Stmt -> State (ProgState) ([Env Value])
 execStmt (Assign s e) = do
                           i <- eval e
                           x <- get
                           case (snd $ liftM (Map.member s) x) of
                              False -> fail "[ERROR] Undefined variable"
-                             True -> modify (\(f,m) -> updateVar (f,m) s i)
+                             True -> modify (\st -> updateVar st s i) >> 
+                                      (get >>= (\(_,r) -> return [r])) 
+                                        
 execStmt (Declare s e) = do
                            i <- eval e
-                           modify (\(f,m) -> insertVar (f,m) s i)
+                           modify (\(f,m) -> insertVar (f,m) s i) >> (get >>= (\(_,r) -> return [r]) )
 execStmt (If e xs (Just ys)) = do 
                                  i <- eval e
                                  case i of 
-                                    (VBool True) -> mapM_ execStmt xs
-                                    (VBool False) -> mapM_ execStmt ys 
+                                    (VBool True) -> do lss <- mapM execStmt xs 
+                                                       return $ (concat lss)
+                                    (VBool False) -> do lss <- mapM execStmt ys 
+                                                        return $ (concat lss)
 execStmt (If e xs Nothing) = do 
                                i <- eval e
                                case i of 
-                                    (VBool True) -> mapM_ execStmt xs
-                                    (VBool False) -> return () 
+                                    (VBool True) -> do lss <- mapM execStmt xs 
+                                                       return $ (concat lss)
+                                    (VBool False) -> get >>= (\(_,r) -> return [r])
 execStmt (While e xs) = whileM e xs
-execStmt (Return e) = do 
-                        i <- eval e
-                        x <- get
-                        modify (\(f,m) -> (f, Map.insert "@return" i m))
-execStmt (CallFunc s xs) = do
-                             (f,m) <- get
-                             case (Map.lookup s f) of
-                                Just (Func s t ns cmds) ->  do vals <- mapM eval xs
-                                                               put (f, exp2Env vals (map snd ns))
-                                                               mapM_ execStmt cmds
-                                                               put (f,m)
-                                Nothing -> fail ("Undefined function: " ++ s)
+-- execStmt (Return e) = do 
+--                         i <- eval e
+--                         x <- get
+--                         modify (\(f,m) -> (f, Map.insert "@return" i m))
+-- execStmt (CallFunc s xs) = do
+--                              (f,m) <- get
+--                              case (Map.lookup s f) of
+--                                 Just (Func s t ns cmds) ->  do vals <- mapM eval xs
+--                                                                put (f, exp2Env vals (map snd ns))
+--                                                                mapM_ execStmt cmds
+--                                                                put (f,m)
+--                                 Nothing -> fail ("Undefined function: " ++ s)
 
-whileM :: Exp -> [Stmt] -> State (ProgState) ()
+whileM :: Exp -> [Stmt] -> State (ProgState) ([Env Value])
 whileM e cmd = do r <- eval e
                   case r of 
-                     (VBool True)  -> (mapM_ execStmt cmd) >> whileM e cmd   
-                     (VBool False) -> return () 
+                     (VBool True)  -> do lss <- mapM execStmt cmd 
+                                         ls <- whileM e cmd
+                                         return $ (concat lss) ++ ls 
+                     (VBool False) -> get >>= (\(_,r) -> return [r])
 
 exp2Env :: [Value] -> [String] -> Env Value
 exp2Env vs ns = Map.fromList (zip ns vs)    
@@ -188,28 +193,10 @@ initState = Map.fromList [("x",VInt 0)]
 -- exec' = mapM_ execStmt
 
 -- exec :: Prog -> [Env Int]
--- exec p = execState (exec' p) [Map.empty]
+-- exec p = execStagn "x" (Lit 0), Assign "y" ((EVar "x") :+: (Lit 1))
+--          , Assign "x" ((EVar "y") :+: (Lit 1))]te (exec' p) [Map.empty]
 
-example :: Prog
-example = [Declare "x" (ILit 10),
-           Declare "y" (ILit 5),
-           Declare "z" (ILit 0),
-           If (Equal (ECallFunc "soma" [EVar "x",EVar "y"]) (ILit 15)) [Assign "z" (ILit 222)] Nothing]
-
-inistate :: ProgState
-inistate = (Map.fromList [("soma",func)],Map.empty)
 
 func :: FuncDec 
 func = Func "soma" TyInt [(TyInt,"x"),(TyInt,"y")] [Assign "x" (ILit 1) ,Return (Plus (EVar "x") (EVar "y"))]
-
--- {-
--- x = 0
--- y = x + 1
--- x = y + 1
--- -}
--- cond :: Interp Int
--- cond s i = s == "x" && i < 0
-
--- prop :: LTL
--- prop = F (Atom "x")
 

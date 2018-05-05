@@ -7,13 +7,7 @@ import Control.Monad.State
 import Data.Map(Map)
 import qualified Data.Map as Map
 
-
 type ASTSt = (Map String FuncDec,[Stmt],[Map String Type])
-
-prog :: State ASTSt ()
-prog = do declare "x" TyFloat (float 2)
-          declare "y" TyFloat (float 1.0)
-          assign "x" ((var "x") .+. (var "y"))
 
 insCode :: ASTSt -> Stmt -> ASTSt
 insCode  (f,stmts,ms) s = (f,stmts++[s],ms)

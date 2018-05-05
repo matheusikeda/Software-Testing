@@ -19,7 +19,8 @@ data Stmt = Assign Var Exp
           | Return Exp
           deriving (Eq,Show,Ord)
 
-data Exp = EVar Var                                                                                   | ILit Int 
+data Exp = EVar Var                
+         | ILit Int 
          | FLit Float
          | DLit Double
          | BLit Bool
@@ -43,4 +44,4 @@ data Value = VInt Int
             |VDouble Double
             |VBool Bool
             |VChar Char
-            deriving (Show)
+            deriving (Show, Ord, Eq)
