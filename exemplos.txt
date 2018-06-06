@@ -1,0 +1,64 @@
+Codigo ex2
+
+botao acender LED (5-HIGH, 0-LOW)    
+
+int ledPin = 13; // escolha o pino para o LED
+int inPin = 2;   // escolha o pino de entrada (para o interruptor)
+int val = 0;     // variável para ler o estado do interruptor
+
+void setup() {
+  pinMode(ledPin, OUTPUT);  // declara-se o LED como saída
+  pinMode(inPin, INPUT);    // declara-se o interruptor como entrada
+}
+
+void loop(){
+  val = digitalRead(inPin);  // ler o valor de entrada
+  if (val == HIGH) {         // verificar se a entrada é HIGH (interruptor livre)
+    digitalWrite(ledPin, LOW);  // desligar LED
+  } else {
+    digitalWrite(ledPin, HIGH);  // ligar LED
+  }
+}
+
+Codigo ex3
+
+// this constant won't change:
+const int  buttonPin = 2;    // the pin that the pushbutton is attached to
+const int ledPin = 13;       // the pin that the LED is attached to
+
+// Variables will change:
+int buttonPushCounter = 0;   // counter for the number of button presses
+int buttonState = 0;         // current state of the button
+int lastButtonState = 0;     // previous state of the button
+
+void setup() {
+  // initialize the button pin as a input:
+  pinMode(buttonPin, INPUT);
+  // initialize the LED as an output:
+  pinMode(ledPin, OUTPUT);
+  // initialize serial communication:
+  Serial.begin(9600);
+}
+
+
+void loop() {
+  // read the pushbutton input pin:
+  buttonState = digitalRead(buttonPin);
+
+  // compare the buttonState to its previous state
+  if (buttonState != lastButtonState) {
+    // if the state has changed, increment the counter
+    if (buttonState == HIGH) {
+      // if the current state is HIGH then the button went from off to on:
+      buttonPushCounter++;
+      
+  // turns on the LED every four button pushes by checking the modulo of the
+  // button push counter. the modulo function gives you the remainder of the
+  // division of two numbers:
+  if (buttonPushCounter % 4 == 0) {
+    digitalWrite(ledPin, HIGH);
+  } else {
+    digitalWrite(ledPin, LOW);
+  }
+
+}

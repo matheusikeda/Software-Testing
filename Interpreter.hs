@@ -57,6 +57,9 @@ import AST
 (</=>) (VBool v) (VBool v') = VBool (v /= v')
 (</=>) (VChar v) (VChar v') = VBool (v /= v')
 
+(<%>) :: Value -> Value -> Value
+(<%>) (VInt v) (VInt v') = VInt (v `mod` v')
+
 not' :: Value -> Value 
 not' (VBool v) = VBool (not v)
 
@@ -80,6 +83,7 @@ eval (Gt e e') = liftM2 (<>>) (eval e) (eval e')
 eval (Lt e e') = liftM2 (<<>) (eval e) (eval e')
 eval (Ne e e') = liftM2 (</=>) (eval e) (eval e')
 eval (Not e) =  liftM (not') (eval e)
+eval (Mod e e') = liftM2 (<%>) (eval e) (eval e')
 eval (ECallFunc s xs) = do
                           (f,m) <- get
                           case (Map.lookup s f) of

@@ -36,6 +36,7 @@ data Exp = EVar Var
          | Lt Exp Exp -- Less than
          | Ne Exp Exp -- Not equal
          | Not Exp
+         | Mod Exp Exp
          | ECallFunc String [Exp]
          deriving (Eq, Ord, Show)
 
