@@ -17,6 +17,7 @@ data Stmt = Assign Var Exp
           | Declare String Exp
           | CallFunc String [Exp]
           | Return Exp
+          | Delay Integer
           deriving (Eq,Show,Ord)
 
 data Exp = EVar Var                

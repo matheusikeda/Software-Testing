@@ -57,6 +57,10 @@ while e xs = do st@(fc,_,ty) <- get
                    True -> do (_,ys,_) <- return $ execState xs (fc,[],ty)
                               put (insCode st (While e ys))
 
+delay :: Integer -> State ASTSt ()
+delay time = do st <- get 
+                put (insCode st (Delay time))
+
 -- callfunc :: String -> [Exp] -> State ASTSt
 -- callfunc s xs = do (f,stmts,m) <- get
 --                    case (Map.lookup s f) of

@@ -16,7 +16,14 @@ ex1 = do
                (do assign "x" ((var "x") .+. (var "y")))
         
 
+ex5 :: State ASTSt ()
+ex5 = do 
+         declare "y" TyInt ((int 2) .+. (int 3))
+         assign "y" (int 5)
+         assign "y" (int 6)
+                       
 
+                              
 ex2 :: State ASTSt ()
 ex2 = do
         declare "ledPin" TyInt (int 13)
@@ -45,3 +52,32 @@ ex3 = do
         ifThenElse (((var "buttonPushCounter") .%. (int 4)) .==. (int 0))
                    (do assign "digitalWrite" (int 5))
                    (do assign "digitalWrite" (int 0))                        
+
+--Semaforos
+ex4 :: State ASTSt ()
+ex4 = do
+        declare "pin5" TyInt (int 0)
+        declare "pin6" TyInt (int 0)
+        declare "pin7" TyInt (int 0)
+        declare "pin8" TyInt (int 0)
+        declare "pin9" TyInt (int 0)
+        declare "pin10" TyInt (int 0)
+        declare "ligado" TyBool (bool True)
+        while ((var "ligado") .==. (bool True)) 
+              (do 
+                 assign "pin5" (int 0)
+                 assign "pin7" (int 5)
+                 assign "pin8" (int 5)
+                 delay(40)
+                 assign "pin7" (int 0)
+                 assign "pin6" (int 5)
+                 delay(20)
+                 assign "pin6" (int 0)
+                 assign "pin5" (int 5)
+                 assign "pin8" (int 0)                          
+                 assign "pin10" (int 5)
+                 delay(40)
+                 assign "pin10" (int 0)
+                 assign "pin9" (int 5)
+                 delay(20)
+                 assign "pin9" (int 0))
