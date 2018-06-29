@@ -56,12 +56,12 @@ ex3 = do
 --Semaforos
 ex4 :: State ASTSt ()
 ex4 = do
-        declare "pin5" TyInt (int 0)
-        declare "pin6" TyInt (int 0)
-        declare "pin7" TyInt (int 0)
-        declare "pin8" TyInt (int 0)
-        declare "pin9" TyInt (int 0)
-        declare "pin10" TyInt (int 0)
+        declare "pin5" TyInt (int 0) -- vermelho 1
+        declare "pin6" TyInt (int 0) -- amarelo 1
+        declare "pin7" TyInt (int 0) -- verde 1
+        declare "pin8" TyInt (int 0) -- vermelh 2o
+        declare "pin9" TyInt (int 0) -- amarelo 2
+        declare "pin10" TyInt (int 0) -- verde 2
         declare "ligado" TyBool (bool True)
         while ((var "ligado") .==. (bool True)) 
               (do 

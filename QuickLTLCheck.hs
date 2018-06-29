@@ -31,6 +31,10 @@ prop = G (Atom "z")
 c1 :: Interp Value
 c1 "pin9" i = i == (VInt 0)
 c1 "pin6" i = i == (VInt 5)
+c1 "pin8" i = i == (VInt 0)
+c1 "pin5" i = i == (VInt 5)
+c1 "pin10" i = i == (VInt 0)
+c1 "pin7" i = i == (VInt 5)
 c1 _ _ = False
 
 prop' :: LTL
