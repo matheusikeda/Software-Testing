@@ -2,10 +2,13 @@ module Interpreter where
 
 import Control.Monad
 import Control.Monad.State
+import Control.Monad.IO.Class
+import System.Random
 import Data.Map(Map)
 import qualified Data.Map as Map
 import LTL (Env, Interp)
 import AST
+
 
 (<+>) :: Value -> Value -> Value 
 (<+>) (VInt v) (VInt v') = VInt (v + v')
@@ -119,6 +122,9 @@ type Prog = [Stmt]
 type Time = Integer
 type ProgState = (Map String FuncDec, Env Value, Time)
 
+pin :: Int -> String
+pin n = (show n) ++ "p"
+
 -- updateValState :: ProgState -> Value -> ProgState
 -- updateValState (f,m) v = (f,Map.update v s m)
 --                          where s = 
@@ -168,9 +174,16 @@ execStmt (If e xs Nothing) = do
                                     (VBool False) -> get >>= (\(_,r,_) -> return [r])
 execStmt (While e xs) = whileM e xs
 execStmt (Delay x) = do modify (\(f,m,t) -> (f,m,t+x*1000)) >> (get >>= (\(_,r,_) -> return [r]))
-execStmt (ReadPin s e) = do 
-                           i <- eval e
-                           modify (\(f,m,t) -> insertVar (f,m,t) s i) >> (get >>= (\(_,r,_) -> return [r]))
+execStmt (DeclareInputPin i rng) = modify (\st ->  updateVar st (pin i) (InputPin rng) )  
+    
+execStmt (ReadPin i s) = do st@(f,m,t) <- get 
+                             case Map.lookup (pin i ) m of 
+                                  Just (InputPin rng) -> do v <- liftIO (randomRIO rng)
+                                                            modify (\st ->  updateVar st s (VInt v) )
+                                                            (get >>= (\(_,r,_) -> return [r]))
+                                  Just (VInt n) -> modify (\st -> updateVar st s  (VInt n)) >>  (get >>= (\(_,r,_) -> return [r]))
+                                  Just (Nothing) -> fail "Holy Cow, this shouldn't have happened !!!!"
+                             
 execStmt (WritePin s e) = do
                             i <- eval e
                             (_,m,_) <- get

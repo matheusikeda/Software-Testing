@@ -61,21 +61,23 @@ delay :: Integer -> State ASTSt ()
 delay time = do st <- get 
                 put (insCode st (Delay time))
 
-readPin :: String -> Type -> Exp -> State ASTSt ()
-readPin s e = st@(_,_,m:_) <- get
-              case verifyTy st e t of 
-                 False -> fail "[ERROR] Types don't match"
-                 True ->  case (Map.lookup s m) of 
-                                 Nothing -> put (insCodeTy st (ReadPin s e) s t)
-                                 Just _  -> fail ("[ERROR] Attempting to set an already set Pin " ++ s)
+inputPin :: Int ->  State ASTSt ()
+inputPin i = put (insCode st (DeclareInputPin i (0,255)))
 
-writePin :: String -> Exp -> State ASTSt ()
-writePin s e = do st@(_,_,m:_) <- get
-                  maybe (fail (s ++ " not defined ")) 
-                        (\t' -> if verifyTy st e t' 
-                                   then put (insCode st (WritePin s e)) 
-                                   else fail (s ++ "[ERROR] Types don't match")) 
-                        (Map.lookup s m)
+inputPinRange :: Int -> (Int,Int) -> State ASTSt ()
+inputPinRange i rng = put (insCode st (DeclareInputPin i rng))
+
+readPin :: Int ->  String -> State ASTSt ()
+readPin pin var = do st@(_,_,m:_) <- get
+                     case verifyTy st var TyInt of 
+                        False -> fail "[ERROR] Types don't match"
+                        True -> put (insCode st (ReadPin pin var))
+ 
+writePin :: Int -> Exp -> State ASTSt ()
+writePin pin e = do st@(_,_,m:_) <- get
+                    case verifyTy st e TyInt of 
+                        True  ->  put (insCode st (WritePin s e))
+                        False ->  fail "[ERROR] Types don't match"
 
 -- callfunc :: String -> [Exp] -> State ASTSt
 -- callfunc s xs = do (f,stmts,m) <- get

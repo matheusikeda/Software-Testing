@@ -18,8 +18,9 @@ data Stmt = Assign Var Exp
           | CallFunc String [Exp]
           | Return Exp
           | Delay Integer
-          | ReadPin String Exp
-          | WritePin String Exp
+          | DeclareInputPin Int (Int,Int)
+          | ReadPin Int Var
+          | WritePin Int Exp
           deriving (Eq,Show,Ord)
 
 data Exp = EVar Var                
@@ -48,4 +49,5 @@ data Value = VInt Int
             |VDouble Double
             |VBool Bool
             |VChar Char
+            |InputPin (Int,Int)
             deriving (Show, Ord, Eq)
