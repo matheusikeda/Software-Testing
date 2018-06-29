@@ -18,6 +18,8 @@ data Stmt = Assign Var Exp
           | CallFunc String [Exp]
           | Return Exp
           | Delay Integer
+          | ReadPin String Exp
+          | WritePin String Exp
           deriving (Eq,Show,Ord)
 
 data Exp = EVar Var                

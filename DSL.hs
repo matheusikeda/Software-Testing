@@ -61,6 +61,22 @@ delay :: Integer -> State ASTSt ()
 delay time = do st <- get 
                 put (insCode st (Delay time))
 
+readPin :: String -> Type -> Exp -> State ASTSt ()
+readPin s e = st@(_,_,m:_) <- get
+              case verifyTy st e t of 
+                 False -> fail "[ERROR] Types don't match"
+                 True ->  case (Map.lookup s m) of 
+                                 Nothing -> put (insCodeTy st (ReadPin s e) s t)
+                                 Just _  -> fail ("[ERROR] Attempting to set an already set Pin " ++ s)
+
+writePin :: String -> Exp -> State ASTSt ()
+writePin s e = do st@(_,_,m:_) <- get
+                  maybe (fail (s ++ " not defined ")) 
+                        (\t' -> if verifyTy st e t' 
+                                   then put (insCode st (WritePin s e)) 
+                                   else fail (s ++ "[ERROR] Types don't match")) 
+                        (Map.lookup s m)
+
 -- callfunc :: String -> [Exp] -> State ASTSt
 -- callfunc s xs = do (f,stmts,m) <- get
 --                    case (Map.lookup s f) of

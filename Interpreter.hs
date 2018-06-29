@@ -168,6 +168,16 @@ execStmt (If e xs Nothing) = do
                                     (VBool False) -> get >>= (\(_,r,_) -> return [r])
 execStmt (While e xs) = whileM e xs
 execStmt (Delay x) = do modify (\(f,m,t) -> (f,m,t+x*1000)) >> (get >>= (\(_,r,_) -> return [r]))
+execStmt (ReadPin s e) = do 
+                           i <- eval e
+                           modify (\(f,m,t) -> insertVar (f,m,t) s i) >> (get >>= (\(_,r,_) -> return [r]))
+execStmt (WritePin s e) = do
+                            i <- eval e
+                            (_,m,_) <- get
+                            case (Map.member s m) of
+                                False -> fail "[ERROR] Undefined pin"
+                                True -> modify (\st -> updateVar st s i) >> 
+                                         (get >>= (\(_,r,_) -> return [r]))             
 
 -- execStmt (Return e) = do 
 --                         i <- eval e
