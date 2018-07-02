@@ -62,22 +62,22 @@ delay time = do st <- get
                 put (insCode st (Delay time))
 
 inputPin :: Int ->  State ASTSt ()
-inputPin i = put (insCode st (DeclareInputPin i (0,255)))
+inputPin i = get >>= \st -> put (insCode st (DeclareInputPin i (0,255)))
 
 inputPinRange :: Int -> (Int,Int) -> State ASTSt ()
-inputPinRange i rng = put (insCode st (DeclareInputPin i rng))
+inputPinRange i rng = get >>= \st -> put (insCode st (DeclareInputPin i rng))
 
 readPin :: Int ->  String -> State ASTSt ()
 readPin pin var = do st@(_,_,m:_) <- get
-                     case verifyTy st var TyInt of 
+                     case verifyTy st (EVar var) TyInt of 
                         False -> fail "[ERROR] Types don't match"
                         True -> put (insCode st (ReadPin pin var))
  
-writePin :: Int -> Exp -> State ASTSt ()
-writePin pin e = do st@(_,_,m:_) <- get
-                    case verifyTy st e TyInt of 
-                        True  ->  put (insCode st (WritePin s e))
-                        False ->  fail "[ERROR] Types don't match"
+-- writePin :: Int -> Exp -> State ASTSt ()
+-- writePin pin e = do st@(_,_,m:_) <- get
+--                     case verifyTy st e TyInt of 
+--                         True  ->  put (insCode st (WritePin s e))
+--                         False ->  fail "[ERROR] Types don't match"
 
 -- callfunc :: String -> [Exp] -> State ASTSt
 -- callfunc s xs = do (f,stmts,m) <- get

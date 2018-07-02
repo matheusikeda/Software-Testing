@@ -81,3 +81,10 @@ ex4 = do
                  assign "pin9" (int 5)
                  delay(20)
                  assign "pin9" (int 0))
+
+ex6 :: State ASTSt ()
+ex6 = do 
+         inputPin 1
+         declare "y" TyInt (int 0)
+         readPin 1 "y"
+        

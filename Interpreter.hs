@@ -2,12 +2,22 @@ module Interpreter where
 
 import Control.Monad
 import Control.Monad.State
+import Data.Functor.Identity
 import Control.Monad.IO.Class
 import System.Random
 import Data.Map(Map)
 import qualified Data.Map as Map
 import LTL (Env, Interp)
 import AST
+
+type Prog = [Stmt]
+type Time = Integer
+type ProgState = (Map String FuncDec, Env Value, Time)
+
+pin :: Int -> String
+pin n 
+    | (0 < n ) && (n < 10) = "0" ++ (show n) ++ "p" 
+    | otherwise = (show n) ++ "p"
 
 
 (<+>) :: Value -> Value -> Value 
@@ -118,12 +128,7 @@ eval (Mod e e') = liftM2' (<%>) (eval e) (eval e')
                                                                  
 --                               Nothing -> fail ("Undefined function: " ++ s)
 
-type Prog = [Stmt]
-type Time = Integer
-type ProgState = (Map String FuncDec, Env Value, Time)
 
-pin :: Int -> String
-pin n = (show n) ++ "p"
 
 -- updateValState :: ProgState -> Value -> ProgState
 -- updateValState (f,m) v = (f,Map.update v s m)
@@ -174,24 +179,23 @@ execStmt (If e xs Nothing) = do
                                     (VBool False) -> get >>= (\(_,r,_) -> return [r])
 execStmt (While e xs) = whileM e xs
 execStmt (Delay x) = do modify (\(f,m,t) -> (f,m,t+x*1000)) >> (get >>= (\(_,r,_) -> return [r]))
-execStmt (DeclareInputPin i rng) = modify (\st ->  updateVar st (pin i) (InputPin rng) )  
+execStmt (DeclareInputPin i rng) = modify (\st ->  updateVar st (pin i) (InputPin rng) ) >> (get >>= (\(_,r,_) -> return [r])) 
     
 execStmt (ReadPin i s) = do st@(f,m,t) <- get 
-                             case Map.lookup (pin i ) m of 
-                                  Just (InputPin rng) -> do v <- liftIO (randomRIO rng)
-                                                            modify (\st ->  updateVar st s (VInt v) )
-                                                            (get >>= (\(_,r,_) -> return [r]))
-                                  Just (VInt n) -> modify (\st -> updateVar st s  (VInt n)) >>  (get >>= (\(_,r,_) -> return [r]))
-                                  Just (Nothing) -> fail "Holy Cow, this shouldn't have happened !!!!"
+                            case (Map.lookup (pin i) m) of 
+                                 Just (InputPin rng) -> do v <- return $ fst (randomR rng (mkStdGen (fromIntegral t)) )
+                                                           modify (\st -> updateVar st s (VInt v) )
+                                                           (get >>= (\(_,r,_) -> return [r]))
+                                 Just (VInt n) -> modify (\st -> updateVar st s (VInt n)) >> (get >>= (\(_,r,_) -> return [r]))
+                                 Nothing -> fail "Holy Cow, this shouldn't have happened !!!!"
                              
-execStmt (WritePin s e) = do
-                            i <- eval e
-                            (_,m,_) <- get
-                            case (Map.member s m) of
-                                False -> fail "[ERROR] Undefined pin"
-                                True -> modify (\st -> updateVar st s i) >> 
-                                         (get >>= (\(_,r,_) -> return [r]))             
-
+-- execStmt (WritePin nb e) = do
+--                              i <- eval e
+--                              st@(_,m,_) <- get
+--                              case (Map.lookup (pin nb) m) of
+--                                   Just (InputPin rng) -> fail "[ERROR] "
+--                                   Just (VInt n) -> do modify (\st -> updateVar st (pin nb) i) >> (get >>= (\(_,r,_) -> return [r]))
+                                   
 -- execStmt (Return e) = do 
 --                         i <- eval e
 --                         x <- get

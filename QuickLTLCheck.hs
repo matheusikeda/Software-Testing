@@ -20,7 +20,12 @@ code :: State ASTSt () -> Prog
 code st = head $ map (\(a,b,c) -> b)((execState st (Map.empty,[],[Map.empty])):[])
 
 inistate :: ProgState
-inistate = (Map.empty, Map.empty,0)
+inistate = (Map.empty, Map.fromList [(nun2digits e ++ "p",VInt 0)| e <- [0..31]],0)
+
+nun2digits :: Int -> String
+nun2digits e
+   | (0 < e) && (e < 10) = "0" ++ (show e) 
+   | otherwise = show e 
 
 cond :: Interp Value
 cond s i = s == "z" && i < (VInt 6)
