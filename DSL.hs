@@ -73,11 +73,11 @@ readPin pin var = do st@(_,_,m:_) <- get
                         False -> fail "[ERROR] Types don't match"
                         True -> put (insCode st (ReadPin pin var))
  
--- writePin :: Int -> Exp -> State ASTSt ()
--- writePin pin e = do st@(_,_,m:_) <- get
---                     case verifyTy st e TyInt of 
---                         True  ->  put (insCode st (WritePin s e))
---                         False ->  fail "[ERROR] Types don't match"
+writePin :: Int -> Exp -> State ASTSt ()
+writePin pin e = do st@(_,_,m:_) <- get
+                    case verifyTy st e TyInt of 
+                        True  ->  put (insCode st (WritePin pin e))
+                        False ->  fail "[ERROR] Types don't match"
 
 -- callfunc :: String -> [Exp] -> State ASTSt
 -- callfunc s xs = do (f,stmts,m) <- get

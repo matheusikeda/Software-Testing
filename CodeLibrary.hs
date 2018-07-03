@@ -87,4 +87,5 @@ ex6 = do
          inputPin 1
          declare "y" TyInt (int 0)
          readPin 1 "y"
+         writePin 2 (int 5)
         

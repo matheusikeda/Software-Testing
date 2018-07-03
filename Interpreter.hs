@@ -188,13 +188,13 @@ execStmt (ReadPin i s) = do st@(f,m,t) <- get
                                                            (get >>= (\(_,r,_) -> return [r]))
                                  Just (VInt n) -> modify (\st -> updateVar st s (VInt n)) >> (get >>= (\(_,r,_) -> return [r]))
                                  Nothing -> fail "Holy Cow, this shouldn't have happened !!!!"
-                             
--- execStmt (WritePin nb e) = do
---                              i <- eval e
---                              st@(_,m,_) <- get
---                              case (Map.lookup (pin nb) m) of
---                                   Just (InputPin rng) -> fail "[ERROR] "
---                                   Just (VInt n) -> do modify (\st -> updateVar st (pin nb) i) >> (get >>= (\(_,r,_) -> return [r]))
+                                                           
+execStmt (WritePin nb e) = do
+                             i <- eval e
+                             st@(_,m,_) <- get
+                             case (Map.lookup (pin nb) m) of
+                                  Just (InputPin rng) -> fail "[ERROR] "
+                                  Just (VInt n) -> do modify (\st -> updateVar st (pin nb) i) >> (get >>= (\(_,r,_) -> return [r]))
                                    
 -- execStmt (Return e) = do 
 --                         i <- eval e
