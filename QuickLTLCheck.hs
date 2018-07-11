@@ -20,33 +20,36 @@ code :: State ASTSt () -> Prog
 code st = head $ map (\(a,b,c) -> b)((execState st (Map.empty,[],[Map.empty])):[])
 
 inistate :: ProgState
-inistate = (Map.empty, Map.fromList [(nun2digits e ++ "p",VInt 0)| e <- [0..31]],0)
+inistate = (Map.empty, Map.fromList [(nun2digits e ++ "p",VInt 0)| e <- [1..32]],0)
+
+inistate' :: ProgState
+inistate' = (Map.empty, Map.empty,0)
+
 
 nun2digits :: Int -> String
 nun2digits e
    | (0 < e) && (e < 10) = "0" ++ (show e) 
    | otherwise = show e 
 
+
 cond :: Interp Value
-cond s i = s == "z" && i < (VInt 6)
+cond "a" i = i < (VInt 4) 
+
+sem :: Interp Value
+sem "07p" i = i == (VInt 5)
+sem "08p" i = i == (VInt 5)
 
 prop :: LTL
-prop = G (Atom "z")
+prop = G ((LTL.Not (Atom "07p")) :|: (Atom "08p"))
 
-c1 :: Interp Value
-c1 "pin9" i = i == (VInt 0)
-c1 "pin6" i = i == (VInt 5)
-c1 "pin8" i = i == (VInt 0)
-c1 "pin5" i = i == (VInt 5)
-c1 "pin10" i = i == (VInt 0)
-c1 "pin7" i = i == (VInt 5)
-c1 _ _ = False
+cond' :: Interp Value
+cond' "temperatura" i = i <= (VInt 255)
 
 prop' :: LTL
-prop' = G (LTL.Not (Atom "pin6") :|: (Atom "pin9"))
+prop' = G (Atom "temperatura") 
 
-checkProg :: Prog -> Interp Value -> LTL -> Bool
-checkProg p i ltl = checkLTL i ltl (runProg p)
+checkProg :: Prog -> Interp Value -> LTL -> (Bool, Maybe (Env Value))
+checkProg p i ltl = checkLTLZ i ltl (runProg p)
 
-partialCheckProg :: Int -> Prog -> Interp Value -> LTL -> Bool
-partialCheckProg s p i ltl = checkLTL i ltl (take s (runProg p))
+partialCheckProg :: Int -> Prog -> Interp Value -> LTL -> (Bool, Maybe (Env Value))
+partialCheckProg s p i ltl = checkLTLZ i ltl (take s $ runProg p)

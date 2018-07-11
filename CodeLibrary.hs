@@ -56,31 +56,48 @@ ex3 = do
 --Semaforos
 ex4 :: State ASTSt ()
 ex4 = do
-        declare "pin5" TyInt (int 0) -- vermelho 1
-        declare "pin6" TyInt (int 0) -- amarelo 1
-        declare "pin7" TyInt (int 0) -- verde 1
-        declare "pin8" TyInt (int 0) -- vermelh 2o
-        declare "pin9" TyInt (int 0) -- amarelo 2
-        declare "pin10" TyInt (int 0) -- verde 2
         declare "ligado" TyBool (bool True)
         while ((var "ligado") .==. (bool True)) 
               (do 
-                 assign "pin5" (int 0)
-                 assign "pin7" (int 5)
-                 assign "pin8" (int 5)
+                 writePin 5 (int 0)
+                 writePin 7 (int 5)
+                 writePin 8 (int 5)
                  delay(40)
-                 assign "pin7" (int 0)
-                 assign "pin6" (int 5)
+                 writePin 7 (int 0)
+                 writePin 6 (int 5)
                  delay(20)
-                 assign "pin6" (int 0)
-                 assign "pin5" (int 5)
-                 assign "pin8" (int 0)                          
-                 assign "pin10" (int 5)
+                 writePin 6 (int 0)
+                 writePin 5 (int 5)
+                 writePin 8 (int 0)                          
+                 writePin 10 (int 5)
                  delay(40)
-                 assign "pin10" (int 0)
-                 assign "pin9" (int 5)
+                 writePin 10 (int 0)
+                 writePin 9 (int 5)
                  delay(20)
-                 assign "pin9" (int 0))
+                 writePin 9 (int 0)
+                 writePin 8 (int 5))
+
+ex4' :: State ASTSt ()
+ex4' = do
+        declare "ligado" TyBool (bool True)
+        while ((var "ligado") .==. (bool True)) 
+              (do 
+                 writePin 5 (int 0)
+                 writePin 7 (int 5)
+                 writePin 9 (int 5)
+                 delay(40)
+                 writePin 7 (int 0)
+                 writePin 6 (int 5)
+                 delay(20)
+                 writePin 6 (int 0)
+                 writePin 5 (int 5)
+                 writePin 8 (int 0)                          
+                 writePin 10 (int 5)
+                 delay(40)
+                 writePin 10 (int 0)
+                 writePin 9 (int 5)
+                 delay(20)
+                 writePin 9 (int 0))
 
 ex6 :: State ASTSt ()
 ex6 = do 
@@ -89,3 +106,23 @@ ex6 = do
          readPin 1 "y"
          writePin 2 (int 5)
         
+exemplo :: State ASTSt ()
+exemplo = do
+            declare "a" TyInt (int 0)
+            declare "b" TyInt (int 0)
+            while ((var "a") .<. (int 5))
+                  (do 
+                     assign "a" ((var "a") .+. (int 1))
+                     assign "b" ((var "a") .*. (int 2))
+                  )         
+
+temp :: State ASTSt ()                  
+temp = do
+         declare "ligado" TyBool (bool True)
+         declare "temperatura" TyInt (int 0)
+         inputPin 1
+         while ((var "ligado") .==. (bool True)) 
+               (do 
+                  readPin 1 "temperatura" 
+                  writePin 5 (var "temperatura"))
+                  
