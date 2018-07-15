@@ -79,8 +79,7 @@ ex4 = do
 
 ex4' :: State ASTSt ()
 ex4' = do
-        declare "ligado" TyBool (bool True)
-        while ((var "ligado") .==. (bool True)) 
+        while (bool True) 
               (do 
                  writePin 5 (int 0)
                  writePin 7 (int 5)
@@ -118,10 +117,9 @@ exemplo = do
 
 temp :: State ASTSt ()                  
 temp = do
-         declare "ligado" TyBool (bool True)
          declare "temperatura" TyInt (int 0)
          inputPin 1
-         while ((var "ligado") .==. (bool True)) 
+         while (bool True) 
                (do 
                   readPin 1 "temperatura" 
                   writePin 5 (var "temperatura"))

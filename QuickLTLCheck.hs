@@ -39,11 +39,18 @@ sem :: Interp Value
 sem "07p" i = i == (VInt 5)
 sem "08p" i = i == (VInt 5)
 
+sem' :: Interp Value
+sem' "06p" i = i == (VInt 5)
+sem' "09p" i = i == (VInt 0)
+
 prop :: LTL
 prop = G ((LTL.Not (Atom "07p")) :|: (Atom "08p"))
 
+prop'' :: LTL
+prop'' = G ((LTL.Not (Atom "06p")) :|: (Atom "09p"))
+
 cond' :: Interp Value
-cond' "temperatura" i = i <= (VInt 255)
+cond' "temperatura" i = i < (VInt 100)
 
 prop' :: LTL
 prop' = G (Atom "temperatura") 
