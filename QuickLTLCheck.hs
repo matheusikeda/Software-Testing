@@ -32,16 +32,25 @@ nun2digits e
    | otherwise = show e 
 
 
+testVal :: (Value -> Value -> Bool) -> String ->  Value -> Env Value -> Bool  
+testVal p var val e = case (Map.lookup var e) of
+                         Just  i -> p i val  
+                         Nothing -> False
+
+operVars :: (Value -> Value -> Bool) -> String -> String -> Env Value -> Bool
+operVars p v1 v2 mp = case (Map.lookup v1 mp,Map.lookup v2 mp) of
+                         (Just  i, Just j)  -> p i j  
+                         _                 -> False
+
 cond :: Interp Value
-cond "a" i = i < (VInt 4) 
+cond "x" mp = testVal (>) "x" (VFloat 0) mp  
 
 sem :: Interp Value
-sem "07p" i = i == (VInt 5)
-sem "08p" i = i == (VInt 5)
+sem "07p" mp = testVal (==) "07p" (VInt 5) mp
+sem "08p" mp = testVal (==) "08p" (VInt 5) mp
 
-sem' :: Interp Value
-sem' "06p" i = i == (VInt 5)
-sem' "09p" i = i == (VInt 0)
+p :: LTL
+p = (F (Atom "x")) 
 
 prop :: LTL
 prop = G ((LTL.Not (Atom "07p")) :|: (Atom "08p"))
@@ -50,7 +59,7 @@ prop'' :: LTL
 prop'' = G ((LTL.Not (Atom "06p")) :|: (Atom "09p"))
 
 cond' :: Interp Value
-cond' "temperatura" i = i < (VInt 100)
+cond' "temperatura" mp = testVal (<) "temperatura" (VInt 100) mp
 
 prop' :: LTL
 prop' = G (Atom "temperatura") 

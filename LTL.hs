@@ -19,12 +19,11 @@ data LTL = Atom String
          deriving (Eq, Ord, Show)
 
 type Env a = Map String a
-type Interp a = String -> a -> Bool
+-- type Interp a = String -> a -> Bool
+type Interp a = String -> Env a -> Bool
 
 lookupVal :: Interp a -> String -> [Env a] -> Bool
-lookupVal interp s (x : xs) = case Map.lookup s x of
-                                 Just y  -> interp s y
-                                 Nothing -> False
+lookupVal p s (x : xs) = p s x 
 
 -- checkLTL :: Interp a -> LTL -> [Env a] -> Bool
 -- checkLTL interp TT ss = True
@@ -62,7 +61,12 @@ mkMaybe False _ = Nothing
 lstCheck :: [(Bool,Maybe (Env a))] -> (Bool,Maybe (Env a))
 lstCheck xs = case dropWhile fst xs of
                   [] -> (True,Nothing)
-                  (x:_) -> x
+                  (x:_) -> x                                
+
+orCheck :: [(Bool,Maybe (Env a))] -> (Bool, Maybe (Env a))
+orCheck xs = case or (map fst xs) of
+                  True -> (True, Nothing)
+                  False -> (False, Just Map.empty)
 
 checkLTLZ :: Interp a -> LTL -> [Env a] -> (Bool,Maybe (Env a)) 
 checkLTLZ interp TT es             = (True,Nothing)
@@ -73,6 +77,7 @@ checkLTLZ interp (l :|: r) es      = (checkLTLZ interp l es)  |+> (checkLTLZ int
 checkLTLZ interp (Not l)   es      = (|!>) (checkLTLZ interp l es)
 checkLTLZ interp (X l)    (_:xs)   = checkLTLZ interp l xs
 checkLTLZ interp (G l) es          = lstCheck $ map (checkLTLZ interp l .(:[])) es 
+checkLTLZ interp (F l) es          = orCheck  $ map (checkLTLZ interp l .(:[])) es
 checkLTL interp (U l r) ss            = let ss' = dropWhile (fst.(checkLTLZ interp l . (: []))) ss 
                                         in checkLTL interp r ss'
 checkLTL interp (W l r) ss            = checkLTLZ interp ((U l r) :|: (G l)) ss
